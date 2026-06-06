@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IPL Cricket Auction Arena | Multiplayer & AI Game</title>
+  <meta name="description" content="Host and join real-time multiplayer or play solo vs AI in this ultimate IPL Cricket Auction simulation. Build your 120 Crore dream squad!">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- PeerJS WebRTC CDN -->
+  <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+</head>
+<body>
+
+  <!-- Background Animated Lights -->
+  <div class="stadium-bg">
+    <div class="spotlight spotlight-left"></div>
+    <div class="spotlight spotlight-right"></div>
+    <div class="stadium-overlay"></div>
+  </div>
+
+  <!-- Main App Container -->
+  <div class="app-wrapper">
+
+    <!-- HEADER / NAVIGATION (Global but dynamic) -->
+    <header class="game-header">
+      <div class="header-logo">
+        <span class="logo-accent">IPL</span> AUCTION ARENA
+      </div>
+      <div class="header-game-info hide" id="header-game-info">
+        <span class="info-badge" id="info-mode">AI Mode</span>
+        <span class="info-badge hide" id="info-room">Room: <strong id="room-code-display">---</strong></span>
+        <span class="info-badge" id="info-squad-count">Squad: <strong id="my-squad-size">0/18</strong></span>
+      </div>
+      <div class="header-nav-buttons hide" id="header-nav-buttons">
+        <button class="nav-btn active" onclick="switchView('auction')" id="nav-btn-auction">Auction Room</button>
+        <button class="nav-btn" onclick="switchView('squad')" id="nav-btn-squad">My Squad & Playing 11</button>
+        <button class="nav-btn btn-exit" onclick="confirmExit()" id="nav-btn-exit">Exit Game</button>
+      </div>
+    </header>
+
+    <!-- 1. LOBBY / SETUP VIEW -->
+    <section class="game-view active" id="view-lobby">
+      <div class="lobby-card">
+        <div class="lobby-hero">
+          <h1>THE 120 CRORE CHALLENGE</h1>
+          <p>Assemble your friends or compete with smart franchises. Auction, outbid, and build your ultimate Playing 11.</p>
+        </div>
+
+        <div class="lobby-options-grid">
+          
+          <!-- Option A: AI Mode -->
+          <div class="lobby-option-card" onclick="selectGameMode('ai')" id="lobby-card-ai">
+            <div class="option-icon">
+              <!-- AI Icon SVG -->
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25M19.5 5.25l-3.59 3.59a2.25 2.25 0 01-3.182 0L9 5.25m10.5 0a2.25 2.25 0 00-2.25-2.25h-10.5a2.25 2.25 0 00-2.25 2.25m13.5 0v1.5c0 .621-.504 1.125-1.125 1.125h-9.75c-.621 0-1.125-.504-1.125-1.125V5.25" />
+              </svg>
+            </div>
+            <h2>Single Player (vs AI)</h2>
+            <p>Compete against 9 computer-controlled IPL franchises with unique bidding styles and budgets.</p>
+            <button class="btn btn-primary btn-lobby">Play vs AI</button>
+          </div>
+
+          <!-- Option B: Multiplayer Mode -->
+          <div class="lobby-option-card" id="lobby-card-multiplayer">
+            <div class="option-icon">
+              <!-- Multiplayer Icon SVG -->
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4-4 2.25 2.25 0 014 4zm-14-4a2.25 2.25 0 11-4 4 2.25 2.25 0 014-4z" />
+              </svg>
+            </div>
+            <h2>Multiplayer Room</h2>
+            <p>Host an auction lobby, get a room code, and have your friends join to bid in real-time.</p>
+            
+            <div class="multiplayer-actions">
+              <button class="btn btn-accent" onclick="initMultiplayer('host')">Host Room</button>
+              <div class="join-box">
+                <input type="text" id="join-code-input" placeholder="Enter Room Code..." maxlength="6">
+                <button class="btn btn-secondary" onclick="initMultiplayer('join')">Join</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. TEAM SELECTION VIEW -->
+    <section class="game-view" id="view-team-select">
+      <div class="team-select-container">
+        <div class="view-header">
+          <h1>Select Your IPL Franchise</h1>
+          <p id="team-select-desc">Each player must represent a unique team. Selected teams will be locked for others.</p>
+        </div>
+
+        <div class="teams-grid" id="teams-grid">
+          <!-- Team cards will be dynamically loaded here by JS -->
+        </div>
+
+        <div class="lobby-waiting-panel hide" id="lobby-waiting-panel">
+          <h2>Room Code: <strong id="room-code-lobby">------</strong></h2>
+          <p id="waiting-status-text">Waiting for other players to connect...</p>
+          <div class="connected-players-list">
+            <h4>Connected Players:</h4>
+            <ul id="players-list-ul">
+              <!-- Dynamically populated -->
+            </ul>
+          </div>
+          <button class="btn btn-primary hide" id="start-game-btn" onclick="startGame()">Start Auction</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. MAIN AUCTION ARENA VIEW -->
+    <section class="game-view" id="view-auction">
+      <div class="auction-grid">
+        
+        <!-- LEFT PANEL: Active Player Card -->
+        <div class="auction-panel panel-left">
+          <div class="card-glow-wrapper">
+            <div class="active-player-card" id="active-player-card">
+              <!-- Default state when auction hasn't started -->
+              <div class="player-card-empty">
+                <div class="gavel-icon">🔨</div>
+                <h3>Auction Room Ready</h3>
+                <p id="start-prompt-text">Click Start to begin bidding on 300 IPL legends.</p>
+                <button class="btn btn-primary" id="host-start-auction-btn" onclick="hostStartAuction()">Start First Round</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTER PANEL: Bidding controls, timers, and logs -->
+        <div class="auction-panel panel-center">
+          
+          <!-- Timer Area -->
+          <div class="timer-widget">
+            <div class="timer-header">
+              <span>Time Remaining to Bid</span>
+              <span class="timer-clock" id="timer-seconds">10.0s</span>
+            </div>
+            <div class="timer-progress-bar">
+              <div class="timer-progress-fill" id="timer-progress-fill"></div>
+            </div>
+          </div>
+
+          <!-- Price & Bidding Board -->
+          <div class="bidding-board">
+            <div class="price-box">
+              <span class="label">Current Bid</span>
+              <span class="value text-accent" id="display-current-bid">0.00 Cr</span>
+            </div>
+            <div class="price-box">
+              <span class="label">Highest Bidder</span>
+              <span class="value" id="display-high-bidder">None</span>
+            </div>
+          </div>
+
+          <!-- Interactive Bidding Button -->
+          <div class="bidding-cta-container">
+            <button class="btn btn-bid disabled" id="place-bid-btn" onclick="placeUserBid()">
+              <span class="bid-action-title">PLACE BID</span>
+              <span class="bid-amount-hike" id="next-bid-amount">Next Bid: 25 Lakhs</span>
+            </button>
+          </div>
+
+          <!-- Bidding Feed (Live Logs) -->
+          <div class="bidding-feed">
+            <h4 class="feed-title">Live Bid Feed</h4>
+            <div class="feed-logs" id="feed-logs">
+              <div class="feed-log-item status">Welcome to the IPL Auction Arena!</div>
+            </div>
+          </div>
+
+          <!-- Host / Moderator controls (visible to Host only) -->
+          <div class="moderator-toolbar hide" id="moderator-toolbar">
+            <h4>Moderator Dashboard</h4>
+            <div class="mod-buttons">
+              <button class="btn btn-small btn-secondary" onclick="pauseAuction()">Pause</button>
+              <button class="btn btn-small btn-secondary" onclick="skipPlayer()">Unsold / Skip</button>
+              <button class="btn btn-small btn-secondary" onclick="forceSold()">Force Sell</button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT PANEL: Standings / Leaderboard -->
+        <div class="auction-panel panel-right">
+          <div class="leaderboard-header">
+            <h3>Franchise Wallets</h3>
+            <p>120.0 Cr Starting Purse</p>
+          </div>
+          <div class="leaderboard-list" id="leaderboard-list">
+            <!-- Dynamically populated teams with purses -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 4. MY SQUAD & PLAYING 11 VIEW -->
+    <section class="game-view" id="view-squad">
+      <div class="squad-container">
+        
+        <div class="squad-header-grid">
+          <div class="squad-details-block">
+            <h1 id="my-squad-title">My Franchise Squad</h1>
+            <p>Remaining Purse: <strong id="my-squad-purse" class="text-accent">120.0 Cr</strong></p>
+          </div>
+          <div class="squad-metrics-block">
+            <div class="metric-box">
+              <span class="label">Squad Size</span>
+              <span class="value" id="metrics-size">0 / 18</span>
+            </div>
+            <div class="metric-box">
+              <span class="label">Playing 11 Status</span>
+              <span class="value status-fail" id="metrics-status">Incomplete</span>
+            </div>
+            <div class="metric-box">
+              <span class="label">Team Rating</span>
+              <span class="value" id="metrics-rating">--</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Play 11 Requirements Warning Alerts -->
+        <div class="squad-alert-panel" id="squad-alerts">
+          <div class="alert-item warning">
+            ⚠️ Playing 11 must consist of exactly 11 players.
+          </div>
+          <div class="alert-item warning">
+            ⚠️ Max 4 Overseas players allowed in Playing 11.
+          </div>
+          <div class="alert-item warning">
+            ⚠️ At least 1 Wicket-Keeper (WK) required in Playing 11.
+          </div>
+        </div>
+
+        <div class="squad-layout-split">
+          
+          <!-- Column A: All Purchased Players (Your bench/pool) -->
+          <div class="squad-panel purchased-pool">
+            <h3>Purchased Players</h3>
+            <p class="panel-subtitle">Click a player card to add them to your Playing 11.</p>
+            <div class="purchased-grid" id="purchased-grid">
+              <div class="empty-squad-msg">You haven't bought any players yet. Bid on players in the Auction Room!</div>
+            </div>
+          </div>
+
+          <!-- Column B: Playing 11 Grid (Pitch Layout) -->
+          <div class="squad-panel playing-eleven">
+            <h3>Playing 11</h3>
+            <p class="panel-subtitle">Construct your optimized 11-player team.</p>
+            <div class="pitch-container">
+              <div class="pitch-grid" id="playing-11-grid">
+                <!-- 11 positions will load here -->
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+  </div>
+
+  <!-- TEAM SQUAD VIEW MODAL (For viewing opponent squads) -->
+  <div class="modal" id="team-squad-modal">
+    <div class="modal-overlay" onclick="closeTeamSquadModal()"></div>
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeTeamSquadModal()">&times;</button>
+      <div class="modal-body">
+        <h2 id="modal-team-title">Mumbai Indians Squad</h2>
+        <p>Purse Remaining: <strong id="modal-team-purse" class="text-accent">---</strong></p>
+        
+        <div class="modal-squad-lists">
+          <div class="modal-squad-section">
+            <h3>Playing 11</h3>
+            <div class="modal-player-list" id="modal-playing-11-list">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+          <div class="modal-squad-section">
+            <h3>Bench</h3>
+            <div class="modal-player-list" id="modal-bench-list">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Modules -->
+  <script src="players.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
